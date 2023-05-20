@@ -1,0 +1,347 @@
+<head>
+    <title>Conversão Gabaritech - Proesc</title>    
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <!-- CSS -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <!-- Default theme -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
+    <!-- Semantic UI theme -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/semantic.min.css"/>
+    <!-- Bootstrap theme -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/bootstrap.min.css"/>
+
+</head>
+<style>
+    body{
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        background-color: #008a8a;
+        color: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    body>h2{
+        color: white;
+    }
+
+    .form{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin-top: 1%;
+        border-radius: 17px;
+        padding: 3% 2% 5% 2%;
+        background-color: white;
+        box-shadow: 8px 12px 8px rgba(0,0,0,0.5);
+    }
+
+    .dia, .arquivo, .quantidade{
+        font-size: 24px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row;
+        padding-bottom: 20px;
+    }
+
+    label{
+        font-size: 24px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row;
+    }
+    
+    select {
+        margin-left: 20px;
+        font-size: 20px;
+        font-weight: 500;
+    }
+
+    input{
+        margin-left: 20px;
+        font-size: 20px;
+        font-weight: 500;
+    }
+
+    .arquivo .btn{
+        margin-left: 20px;
+    }
+
+    .upload-btn-wrapper {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn {
+        border: 2px solid black;
+        color: #323233;
+        background-color: white;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .btn:hover {
+        cursor: pointer;
+        transition-duration: 0.3s;
+        color: #453186;
+        background-color: azure;
+    }
+    input[type=file]:hover {
+        cursor: pointer;
+        transition-duration: 0.3s;
+        color: #453186;
+        background-color: azure;
+    }
+
+    .upload-btn-wrapper input[type=file] {
+        font-size: 100px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+    }
+</style>
+<body>
+    <h2>Conversão de resultados Gabaritech para Proesc</h2><br/>
+    <img src="logos.png" alt="Logos" width="30%" height="20%">
+    <div class="form">    
+        <div class="dia">
+            <label>Tipo de Avaliação: </label>
+            <select name="" id="tipo_av">     
+                <option value="Prova">Prova</option>           
+                <option value="Trabalho">Trabalho</option>               
+            </select>
+        </div>    
+        <div class="dia">
+            <label>Sigla: </label>
+            <input id="sig" value='PG'>
+        </div>
+        <div class="dia">
+            <label>Nota Maxima: </label>
+            <input type="number" id="nota_max"  min="0" max="10" value="10">
+        </div> 
+        <div class="dia">
+            <label>Nome da Avaliação: </label>
+            <input id="nome_av">
+        </div>    
+        <div class="dia">
+            <label>Diario: </label>
+            <select name="" id="trim">                
+                <option value="1º TRIM">1º Trimestre</option>
+                <option value="2º TRIM">2º Trimestre</option>
+                <option value="3º TRIM">3º Trimestre</option>
+            </select>
+        </div>    
+        <div class="arquivo">
+            <label>Arquivo do Gabaritech: </label>
+            <div class="upload-btn-wrapper">
+                <button class="btn" id="btnFile">Escolher Arquivo de notas</button>
+                <input type="file" name="myfile" id="arquivo" accept=".txt"/>
+                <br/>
+            </div>
+        </div>   
+        <div class="arquivo">
+            <label>Arquivo de modelo: </label>
+            <div class="upload-btn-wrapper">
+                <button class="btn" id="btnFile2">Escolher modelo de Carga</button>
+                <input type="file" name="myfileModel" id="model" accept=".xlsx"/>
+                <br/>
+            </div>
+        </div>      
+        
+        <div class="acao">
+            <input type="button" class="btn" value="Converter" id="ok">
+        </div>        
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
+    <!-- JavaScript -->
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/xlsx.full.min.js"></script>
+
+    <script>
+        var myFile, myFileModel;
+        var conteudo="";
+        $("input#arquivo").change( function(e) {
+            $("#btnFile").html(e.target.files[0].name);           
+        });
+
+        $("input#model").change( function(e) {
+            $("#btnFile2").html(e.target.files[0].name);     
+            //UploadProcess();      
+        });
+
+        function UploadProcess(linhasGabaritech) {
+        //Reference the FileUpload element.
+        var fileUpload = document.getElementById("model");
+ 
+        //Validate whether File is valid Excel file.
+            if (typeof (FileReader) != "undefined") {
+                var reader = new FileReader();
+ 
+                //For Browsers other than IE.
+                if (reader.readAsBinaryString) {
+                    reader.onload = function (e) {
+                        console.log(e.target.result)
+                        GetTableFromExcel(linhasGabaritech, e.target.result);
+                    };
+                    reader.readAsBinaryString(fileUpload.files[0]);
+                } else {
+                    //For IE Browser.
+                    reader.onload = function (e) {
+                        var data = "";
+                        var bytes = new Uint8Array(e.target.result);
+                        for (var i = 0; i < bytes.byteLength; i++) {
+                            data += String.fromCharCode(bytes[i]);
+                        }
+                        console.log(data)
+                       //// GetTableFromExcel(data);
+                    };
+                    reader.readAsArrayBuffer(fileUpload.files[0]);
+                }
+            } else {
+                alert("This browser does not support HTML5.");
+            }
+    };
+
+
+    function GetTableFromExcel(linhasGabaritech, data) {
+        var tipoDeAvaliacao = $("#tipo_av option:selected").text();
+        var sigla = $("#sig").val();
+        var notaMaxima = $("#nota_max").val();
+        var nomeAv = $("#nome_av").val();
+        var diario = $("#trim option:selected").text();
+        console.log(tipoDeAvaliacao, sigla, notaMaxima, nomeAv, diario)
+        //Read the Excel File data in binary
+        //var cfb = XLSX.read(data, {type: 'binary'});
+        var workbook = XLSX.read(data, {type: 'binary'});
+ 
+        //get the name of First Sheet.
+        var Sheet = workbook.SheetNames[0];
+ 
+        //Read all rows from First Sheet into an JSON array.
+        var sCSV = XLS.utils.make_csv(workbook.Sheets[Sheet]);   
+        const linhasTabelaFinal = sCSV.split('\n');
+        let resultado = linhasTabelaFinal[0];       
+        /*linhasTabelaFinal.forEach((linha, i) => {
+            if(i != 0){
+                let colunas = linha.split(',');
+                linha = colunas[0]+","+colunas+","+linhasGabaritech;                          
+                resultado+=linha+"\n";
+            }
+        });   */
+        var oJS = XLS.utils.sheet_to_json(workbook.Sheets[Sheet]);   
+
+        linhasGabaritech.forEach((linha,i) => {                      
+                let colunas = linha.split(';');
+                const line = {
+                    tipo_avaliacao: '',
+                    sigla: '',
+                    nome_avaliacao: '',
+                    diario: '',
+                    aluno: '', 
+                    disciplina: '', 
+                    nota: '',
+                }
+                line['tipo_avaliacao'] = tipoDeAvaliacao
+                line['sigla']= sigla;
+                line['nota maxima'] = notaMaxima;
+                line['nome_avaliacao'] = nomeAv;
+                line['diario'] = diario;
+                line['aluno'] = colunas[0];
+                line['disciplina'] = colunas[1];
+                line['nota'] = colunas[2];
+                oJS[i]= line;                       
+            }
+        );        
+        var Heading = [
+        "tipo_avaliacao", "sigla", "nota maxima","nome_avaliacao","diario","aluno","disciplina","nota"
+        ];  
+        const ws = XLSX.utils.json_to_sheet(oJS, {header: Heading});
+        const workbook2 = XLSX.utils.book_new();
+        const fileName =  nomeAv+'.xlsx';
+        XLSX.utils.book_append_sheet(workbook2, ws, "gabarito");
+        alertify.alert('Sucesso', 'Resultado Gerado com sucesso');        
+        XLSX.writeFile(workbook2, fileName);
+    }
+
+        $("#ok").click(function() {                
+                myFile = $('#arquivo').prop('files');
+                var e = $("#arquivo");
+                
+                myFileModel = $('#model').prop('files');
+                var e2 = $("#arquivo");
+                
+                
+
+                if(myFile.length > 0 && myFileModel.length > 0){
+                    const reader = new FileReader();
+                    reader.onload = function fileReadCompleted() {
+                        // when the reader is done, the content is in reader.result.
+                        conteudo=reader.result;
+                        const linhas = conteudo.split('\n');    
+                        UploadProcess(linhas);                  
+                        //gerarFormulas(linhas);                
+                    }
+                    reader.readAsText(myFile[0]);
+                }else{
+                    alertify.alert('Arquivo não selecionado', 'Selecione o arquivo de notas e o modelo do Proesc');
+                }        
+    }
+
+        );
+
+      function gerarFormulas(linhas){
+        var diaSelecionado = $("#dia option:selected").text();
+            
+        let formulas=[];
+        let resultado = "";
+        resultado+= "RA;Nome;Lingua Estrangeira (ING ou ESP);";
+                
+        if(diaSelecionado === '1º'){
+            for(let i = 1; i <= 90; i++){
+                resultado+='q'+i+';';
+            }
+        }else{
+            for(let i = 91; i <= 180; i++){
+                resultado+='q'+i+';';
+            }
+        }
+        resultado+='\n'
+        
+                        linhas.forEach(linha => {
+                                linha = linha.slice(4);                                
+                                linha = linha.replaceAll(',',';');
+                                resultado+=linha+"\n";
+                                formulas.push(resultado);
+                            }
+                        );
+                        console.log(resultado);
+
+                        var link = document.createElement("a");
+                        link.setAttribute("target","_blank");
+                        if(Blob !== undefined) {
+                            var blob = new Blob([resultado], {type: "text/csv"});
+                            link.setAttribute("href", URL.createObjectURL(blob));
+                        } else {
+                            link.setAttribute("href","data:text/csv," + encodeURIComponent(resultado));
+                        }
+                        link.setAttribute("download","arquivoConvertido");
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        /* Alert the copied text */
+                        alertify.alert('Sucesso', 'Resultado gerado com sucesso');                    
+      }
+
+    </script>
+</body>

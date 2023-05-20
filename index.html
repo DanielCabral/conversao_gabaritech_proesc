@@ -187,72 +187,58 @@
         var nomeAv = $("#nome_av").val();
         var diario = $("#trim option:selected").text();
         console.log(tipoDeAvaliacao, sigla, notaMaxima, nomeAv, diario)
-        //Read the Excel File data in binary
-        //var cfb = XLSX.read(data, {type: 'binary'});
-        //const url = "https://github.com/DanielCabral/conversao_gabaritech_proesc/blob/main/Carga%20Gabaritech.xlsx";
-        //const data2 = await (await fetch(url)).arrayBuffer();
-        //var workbook = XLSX.read(data2, {type: 'binary'});
-        var url = "https://colegiomaterchristi.com.br/Carga%20Gabaritech.xlsx";
-
-    /* set up async GET request */
-    var req = new XMLHttpRequest();
-    req.open("GET", url, true);
-    req.responseType = "arraybuffer";
-
-    req.onload = function(e) {
-    var workbook = XLSX.read(req.response);
-
-    //get the name of First Sheet.
-    var Sheet = workbook.SheetNames[0];
  
- //Read all rows from First Sheet into an JSON array.
- var sCSV = XLS.utils.make_csv(workbook.Sheets[Sheet]);   
- const linhasTabelaFinal = sCSV.split('\n');
- let resultado = linhasTabelaFinal[0];       
- /*linhasTabelaFinal.forEach((linha, i) => {
-     if(i != 0){
-         let colunas = linha.split(',');
-         linha = colunas[0]+","+colunas+","+linhasGabaritech;                          
-         resultado+=linha+"\n";
-     }
- });   */
- var oJS = XLS.utils.sheet_to_json(workbook.Sheets[Sheet]);   
+            
+            //const workbook = XLSX.read(data2);
+        var workbook = XLSX.utils.book_new();
 
- linhasGabaritech.forEach((linha,i) => {                      
-         let colunas = linha.split(';');
-         const line = {
-             tipo_avaliacao: '',
-             sigla: '',
-             nome_avaliacao: '',
-             diario: '',
-             aluno: '', 
-             disciplina: '', 
-             nota: '',
-         }
-         line['tipo_avaliacao'] = tipoDeAvaliacao
-         line['sigla']= sigla;
-         line['nota maxima'] = notaMaxima;
-         line['nome_avaliacao'] = nomeAv;
-         line['diario'] = diario;
-         line['aluno'] = colunas[0];
-         line['disciplina'] = colunas[1];
-         line['nota'] = colunas[2];
-         oJS[i]= line;                       
-     }
- );        
- var Heading = [
- "tipo_avaliacao", "sigla", "nota maxima","nome_avaliacao","diario","aluno","disciplina","nota"
- ];  
- const ws = XLSX.utils.json_to_sheet(oJS, {header: Heading});
- const workbook2 = XLSX.utils.book_new();
- const fileName =  nomeAv+'.xlsx';
- XLSX.utils.book_append_sheet(workbook2, ws, "gabarito");
- alertify.alert('Sucesso', 'Resultado Gerado com sucesso');        
- XLSX.writeFile(workbook2, fileName);
-             /* DO SOMETHING WITH workbook HERE */
-    };
+        //get the name of First Sheet.
+        var Sheet = workbook.SheetNames[0];
+ 
+        //Read all rows from First Sheet into an JSON array.
+        var sCSV = XLS.utils.make_csv(workbook.Sheets[Sheet]);   
+        const linhasTabelaFinal = sCSV.split('\n');
+        let resultado = linhasTabelaFinal[0];       
+        /*linhasTabelaFinal.forEach((linha, i) => {
+            if(i != 0){
+                let colunas = linha.split(',');
+                linha = colunas[0]+","+colunas+","+linhasGabaritech;                          
+                resultado+=linha+"\n";
+            }
+        });   */
+        var oJS = XLS.utils.sheet_to_json(workbook.Sheets[Sheet]);   
 
-req.send();
+        linhasGabaritech.forEach((linha,i) => {                      
+                let colunas = linha.split(';');
+                const line = {
+                    tipo_avaliacao: '',
+                    sigla: '',
+                    nome_avaliacao: '',
+                    diario: '',
+                    aluno: '', 
+                    disciplina: '', 
+                    nota: '',
+                }
+                line['tipo_avaliacao'] = tipoDeAvaliacao
+                line['sigla']= sigla;
+                line['nota maxima'] = notaMaxima;
+                line['nome_avaliacao'] = nomeAv;
+                line['diario'] = diario;
+                line['aluno'] = colunas[0];
+                line['disciplina'] = colunas[1];
+                line['nota'] = colunas[2];
+                oJS[i]= line;                       
+            }
+        );        
+        var Heading = [
+        "tipo_avaliacao", "sigla", "nota maxima","nome_avaliacao","diario","aluno","disciplina","nota"
+        ];  
+        const ws = XLSX.utils.json_to_sheet(oJS, {header: Heading});
+        const workbook2 = XLSX.utils.book_new();
+        const fileName =  nomeAv+'.xlsx';
+        XLSX.utils.book_append_sheet(workbook2, ws, "gabarito");
+        alertify.alert('Sucesso', 'Resultado Gerado com sucesso');        
+        XLSX.writeFile(workbook2, fileName);
     }
 
         $("#ok").click(function() {                
@@ -269,6 +255,7 @@ req.send();
                     reader.onload = function fileReadCompleted() {
                         // when the reader is done, the content is in reader.result.
                         conteudo=reader.result;
+                        conteudo=conteudo.substring(0, conteudo.length-1)
                         const linhas = conteudo.split('\n');    
                         UploadProcess(linhas);                  
                         //gerarFormulas(linhas);                

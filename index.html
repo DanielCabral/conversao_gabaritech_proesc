@@ -172,7 +172,10 @@
         var myFile, myFileModel;
         var conteudo="";
         $("input#arquivo").change( function(e) {
-            $("#btnFile").html(e.target.files[0].name);           
+            const nameFile= e.target.files[0].name;  
+            $("#btnFile").html(nameFile);               
+             //$("#btnFile").html(e.target.files[0]);              
+            $("#nome_av").val(nameFile.substring(0,nameFile.length-4));        
         });
 
         $("input#model").change( function(e) {
@@ -223,6 +226,8 @@
         console.log(tipoDeAvaliacao, sigla, notaMaxima, nomeAv, diario)
         //Read the Excel File data in binary
         //var cfb = XLSX.read(data, {type: 'binary'});
+        const url = "https://oss.sheetjs.com/test_files/formula_stress_test.xlsx";
+        const data = await (await fetch(url)).arrayBuffer();
         var workbook = XLSX.read(data, {type: 'binary'});
  
         //get the name of First Sheet.

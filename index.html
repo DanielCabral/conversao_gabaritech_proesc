@@ -148,15 +148,7 @@
                 <input type="file" name="myfile" id="arquivo" accept=".txt"/>
                 <br/>
             </div>
-        </div>   
-        <div class="arquivo">
-            <label>Arquivo de modelo: </label>
-            <div class="upload-btn-wrapper">
-                <button class="btn" id="btnFile2">Escolher modelo de Carga</button>
-                <input type="file" name="myfileModel" id="model" accept=".xlsx"/>
-                <br/>
-            </div>
-        </div>      
+        </div>    
         
         <div class="acao">
             <input type="button" class="btn" value="Converter" id="ok">
@@ -184,40 +176,11 @@
         });
 
         function UploadProcess(linhasGabaritech) {
-        //Reference the FileUpload element.
-        var fileUpload = document.getElementById("model");
- 
-        //Validate whether File is valid Excel file.
-            if (typeof (FileReader) != "undefined") {
-                var reader = new FileReader();
- 
-                //For Browsers other than IE.
-                if (reader.readAsBinaryString) {
-                    reader.onload = function (e) {
-                        console.log(e.target.result)
-                        GetTableFromExcel(linhasGabaritech, e.target.result);
-                    };
-                    reader.readAsBinaryString(fileUpload.files[0]);
-                } else {
-                    //For IE Browser.
-                    reader.onload = function (e) {
-                        var data = "";
-                        var bytes = new Uint8Array(e.target.result);
-                        for (var i = 0; i < bytes.byteLength; i++) {
-                            data += String.fromCharCode(bytes[i]);
-                        }
-                        console.log(data)
-                       //// GetTableFromExcel(data);
-                    };
-                    reader.readAsArrayBuffer(fileUpload.files[0]);
-                }
-            } else {
-                alert("This browser does not support HTML5.");
-            }
+            GetTableFromExcel(linhasGabaritech);        
     };
 
 
-    function GetTableFromExcel(linhasGabaritech, data) {
+    function GetTableFromExcel(linhasGabaritech) {
         var tipoDeAvaliacao = $("#tipo_av option:selected").text();
         var sigla = $("#sig").val();
         var notaMaxima = $("#nota_max").val();
@@ -226,57 +189,70 @@
         console.log(tipoDeAvaliacao, sigla, notaMaxima, nomeAv, diario)
         //Read the Excel File data in binary
         //var cfb = XLSX.read(data, {type: 'binary'});
-        const url = "https://oss.sheetjs.com/test_files/formula_stress_test.xlsx";
-        const data = await (await fetch(url)).arrayBuffer();
-        var workbook = XLSX.read(data, {type: 'binary'});
- 
-        //get the name of First Sheet.
-        var Sheet = workbook.SheetNames[0];
- 
-        //Read all rows from First Sheet into an JSON array.
-        var sCSV = XLS.utils.make_csv(workbook.Sheets[Sheet]);   
-        const linhasTabelaFinal = sCSV.split('\n');
-        let resultado = linhasTabelaFinal[0];       
-        /*linhasTabelaFinal.forEach((linha, i) => {
-            if(i != 0){
-                let colunas = linha.split(',');
-                linha = colunas[0]+","+colunas+","+linhasGabaritech;                          
-                resultado+=linha+"\n";
-            }
-        });   */
-        var oJS = XLS.utils.sheet_to_json(workbook.Sheets[Sheet]);   
+        //const url = "https://github.com/DanielCabral/conversao_gabaritech_proesc/blob/main/Carga%20Gabaritech.xlsx";
+        //const data2 = await (await fetch(url)).arrayBuffer();
+        //var workbook = XLSX.read(data2, {type: 'binary'});
+        var url = "https://colegiomaterchristi.com.br/Carga%20Gabaritech.xlsx";
 
-        linhasGabaritech.forEach((linha,i) => {                      
-                let colunas = linha.split(';');
-                const line = {
-                    tipo_avaliacao: '',
-                    sigla: '',
-                    nome_avaliacao: '',
-                    diario: '',
-                    aluno: '', 
-                    disciplina: '', 
-                    nota: '',
-                }
-                line['tipo_avaliacao'] = tipoDeAvaliacao
-                line['sigla']= sigla;
-                line['nota maxima'] = notaMaxima;
-                line['nome_avaliacao'] = nomeAv;
-                line['diario'] = diario;
-                line['aluno'] = colunas[0];
-                line['disciplina'] = colunas[1];
-                line['nota'] = colunas[2];
-                oJS[i]= line;                       
-            }
-        );        
-        var Heading = [
-        "tipo_avaliacao", "sigla", "nota maxima","nome_avaliacao","diario","aluno","disciplina","nota"
-        ];  
-        const ws = XLSX.utils.json_to_sheet(oJS, {header: Heading});
-        const workbook2 = XLSX.utils.book_new();
-        const fileName =  nomeAv+'.xlsx';
-        XLSX.utils.book_append_sheet(workbook2, ws, "gabarito");
-        alertify.alert('Sucesso', 'Resultado Gerado com sucesso');        
-        XLSX.writeFile(workbook2, fileName);
+    /* set up async GET request */
+    var req = new XMLHttpRequest();
+    req.open("GET", url, true);
+    req.responseType = "arraybuffer";
+
+    req.onload = function(e) {
+    var workbook = XLSX.read(req.response);
+
+    //get the name of First Sheet.
+    var Sheet = workbook.SheetNames[0];
+ 
+ //Read all rows from First Sheet into an JSON array.
+ var sCSV = XLS.utils.make_csv(workbook.Sheets[Sheet]);   
+ const linhasTabelaFinal = sCSV.split('\n');
+ let resultado = linhasTabelaFinal[0];       
+ /*linhasTabelaFinal.forEach((linha, i) => {
+     if(i != 0){
+         let colunas = linha.split(',');
+         linha = colunas[0]+","+colunas+","+linhasGabaritech;                          
+         resultado+=linha+"\n";
+     }
+ });   */
+ var oJS = XLS.utils.sheet_to_json(workbook.Sheets[Sheet]);   
+
+ linhasGabaritech.forEach((linha,i) => {                      
+         let colunas = linha.split(';');
+         const line = {
+             tipo_avaliacao: '',
+             sigla: '',
+             nome_avaliacao: '',
+             diario: '',
+             aluno: '', 
+             disciplina: '', 
+             nota: '',
+         }
+         line['tipo_avaliacao'] = tipoDeAvaliacao
+         line['sigla']= sigla;
+         line['nota maxima'] = notaMaxima;
+         line['nome_avaliacao'] = nomeAv;
+         line['diario'] = diario;
+         line['aluno'] = colunas[0];
+         line['disciplina'] = colunas[1];
+         line['nota'] = colunas[2];
+         oJS[i]= line;                       
+     }
+ );        
+ var Heading = [
+ "tipo_avaliacao", "sigla", "nota maxima","nome_avaliacao","diario","aluno","disciplina","nota"
+ ];  
+ const ws = XLSX.utils.json_to_sheet(oJS, {header: Heading});
+ const workbook2 = XLSX.utils.book_new();
+ const fileName =  nomeAv+'.xlsx';
+ XLSX.utils.book_append_sheet(workbook2, ws, "gabarito");
+ alertify.alert('Sucesso', 'Resultado Gerado com sucesso');        
+ XLSX.writeFile(workbook2, fileName);
+             /* DO SOMETHING WITH workbook HERE */
+    };
+
+req.send();
     }
 
         $("#ok").click(function() {                
@@ -288,7 +264,7 @@
                 
                 
 
-                if(myFile.length > 0 && myFileModel.length > 0){
+                if(myFile.length > 0){
                     const reader = new FileReader();
                     reader.onload = function fileReadCompleted() {
                         // when the reader is done, the content is in reader.result.
